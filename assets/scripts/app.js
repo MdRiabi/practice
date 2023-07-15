@@ -2,8 +2,9 @@ class ToolTip { }
 
 class ProjectItem { 
 
-    constructor(id){
+    constructor(id , updateProjectListsFunction){
         this.id = id;
+        this.updateProjectListsHandler = updateProjectListsFunction; 
         this.connectMoreInfoButton();
         this.connectSwitchButton();
 
@@ -14,7 +15,7 @@ class ProjectItem {
     connectSwitchButton(){
         const projectItemElement = document.getElementById(this.id);
         const switchBtn = projectItemElement.querySelector('button:last-of-type');
-        switchBtn.addEventListener('click',)
+        switchBtn.addEventListener('click', this.updateProjectListsHandler)
     }
 
 }
@@ -23,17 +24,22 @@ class ProjectItem {
 
 class ProjectList {
     projects = [];
-    constructor(type , switchHandlerFunction) {
+    constructor(type) {
         this.type =type;
-        this.switchHandler = switchHandlerFunction;
         const prjItems = document.querySelectorAll(`#${type}-projects li`);
 
         for (const prjItem of prjItems) {
-            this.projects.push(new ProjectItem(prjItem.id));
+            this.projects.push(new ProjectItem(prjItem.id , this.switchProject.bind(this)));
         }
     }
 
-    addProject() { }
+    setSwitchHandlerFunction(switchHandlerFunction) {
+        this.switchHandler = switchHandlerFunction;
+
+    }
+    addProject() {
+        console.log(this)
+     }
 
     switchProject(projectId) {
         /* const projectIndex = this.projects.indexOf(p => p.id === projectId);
@@ -46,10 +52,14 @@ class ProjectList {
 
 
 class App {
-    init() {
+   static init() {
 
         const activeProjectList = new ProjectList('active');
         const finshedProjectList = new ProjectList('finished');
+        activeProjectList.setSwitchHandlerFunction(finshedProjectList.addProject.bind(finshedProjectList));
+        finshedProjectList.setSwitchHandlerFunction(activeProjectList.addProject.bind(activeProjectList));
+
     }
+
 }
 App.init();
