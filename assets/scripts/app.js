@@ -1,21 +1,52 @@
+class DOMHelper {
+
+    static clearEventListeners(element) {
+        const clonedElement = element.cloneNode(true);
+        element.replaceWith(clonedElement);
+        return clonedElement;
+    }
+
+
+    static moveElement(elemntId, newDestinationSelector) {
+
+        const elemnt = document.getElementById(elemntId);
+        const destinationElement = document.querySelector(newDestinationSelector);
+        destinationElement.append(elemnt);
+
+    }
+}
+
+
+
+
 class ToolTip { }
 
-class ProjectItem { 
+class ProjectItem {
 
-    constructor(id , updateProjectListsFunction){
+    constructor(id, updateProjectListsFunction , type) {
         this.id = id;
-        this.updateProjectListsHandler = updateProjectListsFunction; 
+        this.updateProjectListsHandler = updateProjectListsFunction;
         this.connectMoreInfoButton();
-        this.connectSwitchButton();
+        this.connectSwitchButton(type);
 
     }
 
-    connectMoreInfoButton(){}
+    connectMoreInfoButton() { }
 
-    connectSwitchButton(){
+    connectSwitchButton(type) {
         const projectItemElement = document.getElementById(this.id);
-        const switchBtn = projectItemElement.querySelector('button:last-of-type');
-        switchBtn.addEventListener('click', this.updateProjectListsHandler)
+        let  switchBtn = projectItemElement.querySelector('button:last-of-type');
+        switchBtn = DOMHelper.clearEventListeners(switchBtn);
+        switchBtn.textContent = type === 'active' ? 'Finish' : 'Activated';
+        switchBtn.addEventListener(
+            'click', 
+             this.updateProjectListsHandler.bind(null , this.id))
+    }
+
+    update(updateProjectListFn , type){
+        this.updateProjectListsHandler = updateProjectListFn;
+        this.connectSwitchButton(type);
+
     }
 
 }
@@ -25,11 +56,11 @@ class ProjectItem {
 class ProjectList {
     projects = [];
     constructor(type) {
-        this.type =type;
+        this.type = type;
         const prjItems = document.querySelectorAll(`#${type}-projects li`);
 
         for (const prjItem of prjItems) {
-            this.projects.push(new ProjectItem(prjItem.id , this.switchProject.bind(this)));
+            this.projects.push(new ProjectItem(prjItem.id, this.switchProject.bind(this), this.type));
         }
     }
 
@@ -37,9 +68,13 @@ class ProjectList {
         this.switchHandler = switchHandlerFunction;
 
     }
-    addProject() {
-        console.log(this)
-     }
+    addProject(project) {
+        //console.log(this)
+        this.projects.push(project);
+        DOMHelper.moveElement(project.id , `#${this.type}-projects ul`);
+        project.update(this.switchProject.bind(this));
+
+    }
 
     switchProject(projectId) {
         /* const projectIndex = this.projects.indexOf(p => p.id === projectId);
@@ -52,7 +87,7 @@ class ProjectList {
 
 
 class App {
-   static init() {
+    static init() {
 
         const activeProjectList = new ProjectList('active');
         const finshedProjectList = new ProjectList('finished');
